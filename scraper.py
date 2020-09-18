@@ -1,6 +1,7 @@
 import requests
 from vehicle import *
 from proxies import *
+from plateRecognition import *
 from bs4 import BeautifulSoup
 import time
 
@@ -102,12 +103,15 @@ def scrapItems(url):
     i=0
     mainUrl = "https://sahibinden.com"
     advs=[]
+    #session=getSession()
+
     for item in soup.find_all("tr",{"data-id":True}):
         print(mainUrl+item.find("a")["href"])
         page = requests.get(mainUrl+item.find("a")["href"], headers = HEADERS)
         soup=BeautifulSoup(page.content,"html.parser")
         adv = ad()
 
+        adv.setPlateNumber(extractPlateNumber(soup))
         adv.setTitle(soup.find("div", {"class":"classifiedDetailTitle"}).find("h1").text)
         adv.setAdId(soup.find("span", {"class": "classifiedId"}).text)
         adv.setSellerName(soup.find("div",{"class":"username-info-area"}).find("h5").text)
@@ -160,8 +164,6 @@ def scrapItems(url):
                 counter +=1
 
         advs.append(adv)
-        #break
-
 
     return advs
 

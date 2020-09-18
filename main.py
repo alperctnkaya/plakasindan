@@ -1,16 +1,14 @@
-# This is a sample Python script.
+from scraper import *
+from plateRecognition import *
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+def main():
 
+    brands,brandNames=scrapBrands()
+    scrapModels(brands,["Audi"])
+    scrapSeries(brands["Audi"],["A1"])
+    scrapPackages(brands["Audi"].models["A1"],["1.4 TFSI"])
+    advs = scrapItems( brands["Audi"].models["A1"].series["1.4 TFSI"].packages["Ambition"].packageUrl )
+    return advs,  brands
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+if __name__ =="__main__":
+    advs, brands = main()

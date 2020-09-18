@@ -78,6 +78,9 @@ class ad():
     def setAdId(self,id):
         self.id=id
 
+    def setPlateNumber(self,plateNumber):
+        self.plateNumber= plateNumber
+
     def setCity(self,city):
         self.city = city
 
