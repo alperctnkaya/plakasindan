@@ -1,177 +1,253 @@
-import requests
 from vehicle import *
 from proxies import *
 from plateRecognition import *
+from requester import *
 from bs4 import BeautifulSoup
-import time
+
 
 URL = "https://www.sahibinden.com"
 
-HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.87 Safari/537.36', }
+headersList = []
 
-def scrapBrands():
-    brands = {}
-    brandNames=[]
-    page = requests.get(URL + "/kategori/otomobil", headers=HEADERS)
-    soup = BeautifulSoup(page.content, "html.parser")
-    for brand in soup.find_all("div", {"class": "uiInlineBoxContent category-list"}):
-        for liTag in brand.find_all("li"):
-            brands[liTag.find("a").text]=vehicle("car",liTag.find("a").text,URL+liTag.find("a")["href"])
-            brandNames.append(liTag.find("a").text)
-    return brands, brandNames
+headersList.append({
+    "Cache-Control": "max-age=0",
+    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.87 Safari/537.36',
+ })
+headersList.append({
+    "Accept-Encoding": "gzip, deflate, br",
+    "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0",
+ })
+headersList.append({
+    "Accept-Language": "en-US,en;q=0.5",
+    "Accept-Encoding": "gzip, br",
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0",
+})
 
-def scrapModels(brands, brandNames):
+headersList.append({
+    "Accept-Language": "en-US,en;q=0.5",
+    "Accept-Encoding": "gzip, br",
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0",
+    "Cookie": "vid=66; cdid=cX8LRliHmXW43Ghm605af0cb; MS1=https://www.google.com/; _fbp=fb.1.1616581610353.907691525; _ga=GA1.2.1228957301.1616581612; nwsh=std; OptanonConsent=isIABGlobal=false&datestamp=Thu+Apr+01+2021+11%3A50%3A49+GMT%2B0300+(GMT%2B03%3A00)&version=6.14.0&hosts=&consentId=0d17179d-0703-433c-7b89-575d5db3cd49&interactionCount=2&landingPath=NotLandingPage&groups=C0001%3A1%2CC0004%3A0&AwaitingReconsent=false&geolocation=TR%3B06; _gid=GA1.2.284740771.1617020639; OptanonAlertBoxClosed=2021-03-29T12:27:33.786Z; st=a84541c4b561942468995fb30a3eba0340698520ac097914358a610c9690db6eee60ad758188271022f5771df6964f0e1d3f80dbe0f2ba206; geoipCity=antalya; geoipIsp=turkcell_superonline"})
 
-    requestCount = 0
+
+headersList.append({
+    "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:86.0) Gecko/20100101 Firefox/86.0",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
+    "Cache-Control": "max-age=0",
+    "Cookie": "vid=66; cdid=cX8LRliHmXW43Ghm605af0cb; MS1=https://www.google.com/; _fbp=fb.1.1616581610353.907691525; _ga=GA1.2.1228957301.1616581612; nwsh=std; showPremiumBanner=false; segIds=; OptanonConsent=isIABGlobal=false&datestamp=Thu+Apr+01+2021+11%3A50%3A49+GMT%2B0300+(GMT%2B03%3A00)&version=6.14.0&hosts=&consentId=0d17179d-0703-433c-8b89-575d5db3cd49&interactionCount=2&landingPath=NotLandingPage&groups=C0001%3A1%2CC0004%3A0&AwaitingReconsent=false&geolocation=TR%3B06; _gid=GA1.2.284740771.1617020639; OptanonAlertBoxClosed=2021-03-29T12:27:33.786Z; st=a84541c4b561942468995fb30a3eba0340698520ac097914358a610c9690db6eee60ad758188271022f5771df6964f0e1d3f80dbe0f2ba206; geoipCity=ankara; geoipIsp=turkcell_superonline"
+})
+
+
+def scrapBrandTree(req, brands=None):
+    if brands is None:
+        brands = scrapBrands(req)
+
+    brandNames = [brand for brand in brands]
+
+    if False:
+        scrapModels(brands, brandNames, req)
+
     for brand in brandNames:
-        if requestCount % 20 == 0:
-            #session = getSession()
-            session = requests.Session()
+        try:
+            scrapSeries(brands[brand], brands[brand].modelNames, req)
+        except:
+            return brands
 
-        pageBrand = session.get(brands[brand].brandUrl, headers = HEADERS)
-        soupBrand = BeautifulSoup(pageBrand.content,"html.parser")
+        for model in brands[brand].modelNames:
+            try:
+                scrapPackages(brands[brand].models[model], brands[brand].models[model].series, req)
+            except:
+                return brands
+
+    return brands
+
+
+def scrapBrands(req):
+    brands = {}
+    brandNames = []
+    url = URL + "/kategori/otomobil"
+    page = req.request(url)
+    soup = BeautifulSoup(page.content, "html.parser")
+
+    for _brand in soup.find_all("div", {"class": "uiInlineBoxContent category-list"}):
+        for liTag in _brand.find_all("li"):
+            brands[liTag.find("a").text] = brand(liTag.find("a").text, URL + liTag.find("a")["href"])
+
+    return brands
+
+
+# Audi, A1 ... A5 vs
+def scrapModels(brands, brandNames, req):
+    v_type = "car"
+    # v_type'ı dinamik olarak al
+
+    modelNames = []
+    for brand in brandNames:
+
+        url = brands[brand].brandUrl
+        page = req.request(url)
+        soupBrand = BeautifulSoup(page.content, "html.parser")
+        if (soupBrand == -1):
+            return
 
         models = []
-        modelNames=[]
-        for modelItem in soupBrand.find_all("div",{"class":"multiple-models"}):
-            for liTag in modelItem.find_all("li",{"class": "cl3"}):
-                model = modelClass()
-                model.setModel(liTag.find("a").text.replace("  ","").replace("\n",""))
-                modelNames.append(liTag.find("a").text.replace("  ", "").replace("\n", ""))
-                model.setModelUrl(brands[brand].brandUrl + "-" + liTag.find("a").text.replace("  ", "").replace("\n", "").replace(" ","-").lower())
-                brands[brand].appendModel(model.modelName, model)
+        for modelItem in soupBrand.find_all("div", {"class": "multiple-models"}):
+            for liTag in modelItem.find_all("li", {"class": "cl3"}):
+                model_name = liTag.find("a").text.replace("  ", "").replace("\n", "")
+                model_url = brands[brand].brandUrl + "-" + liTag.find("a").text.replace("  ", "").replace("\n",
+                                                                                                          "").replace(
+                    " ", "-").lower()
+                _model = model(v_type, brand, model_name, model_url)
+                brands[brand].appendModel(_model.modelName, _model)
+                models.append(_model.modelName)
+        modelNames.append(models)
 
-        brands[brand].setModelNames(modelNames)
-        requestCount+=1
+    return modelNames
 
-#Audi, A1 ...
-def scrapSeries(brand, models):
 
-    requestCount=0
-
+def scrapSeries(brand, models, req):
+    serieNames = []
     for model in models:
-        if requestCount%20 == 0:
-            #session=getSession()
-            session = requests.Session()
+        v_type = brand.models[model].type
 
-        pageModel = requests.get(brand.models[model].modelUrl, headers = HEADERS )
-        soupModel = BeautifulSoup(pageModel.content, "html.parser")
-        series=[]
-        serieNames=[]
+        url = brand.models[model].modelUrl
+        page = req.request(url)
+        soupModel = BeautifulSoup(page.content, "html.parser")
 
-        for serie in soupModel.find_all("div", {"class":"model"}):
-            for liTag in serie.find_all("li",{"class":"cl4"}):
-                serie = serieClass()
-                serie.setSerie(liTag.find("a").text.replace("  ","").replace("\n",""))
-                serieNames.append(liTag.find("a").text.replace("  ", "").replace("\n", ""))
-                serie.setSerieUrl(brand.models[model].modelUrl+"-"+ liTag.find("a").text.replace("  ","").replace("\n","").replace(" ","-").lower())
-                brand.models[model].appendSerie(serie.serieName, serie)
+        if (soupModel == -1):
+            print("-SERIES")
+            return
 
-        brand.models[model].setSerieNames(serieNames)
-        requestCount+=1
+        series = []
 
-#Audi A1, series = 1.4 TFSI ...
-def scrapPackages(model, series):
+        for serieItem in soupModel.find_all("div", {"class": "model"}):
+            for liTag in serieItem.find_all("li", {"class": "cl4"}):
+                serieName = liTag.find("a").text.replace("  ", "").replace("\n", "")
+                serieUrl = brand.models[model].modelUrl + "-" + liTag.find("a").text.replace("  ", "").replace("\n",
+                                                                                                               "").replace(
+                    " ", "-").lower()
+                _serie = serie(v_type, brand.brand, model, serieName, serieUrl)
+                brand.models[model].appendSerie(_serie.serieName, _serie)
+                series.append(_serie.serieName)
 
-    requestCount=0
+        serieNames.append(series)
+
+    return serieNames
+
+
+# Audi A1, series = 1.4 TFSI ...
+def scrapPackages(model, series, req):
+    packages = []
+    brand = model.brand
+    v_type = model.type
+
     for serie in series:
-        if requestCount%20 == 0:
-            #session=getSession()
-            session=requests.Session()
 
-        pageSerie = requests.get(model.series[serie].serieUrl, headers = HEADERS)
-        soupSerie = BeautifulSoup(pageSerie.content,"html.parser")
+        url = model.series[serie].serieUrl
+        page = req.request(url)
+        soupSerie = BeautifulSoup(page.content, "html.parser")
 
-        packages=[]
-        packageNames=[]
+        if (soupSerie == -1):
+            print("-SERIES")
+            return
 
-        for package in soupSerie.find_all("div", {"class":"scroll-pane lazy-scroll"}):
-            for liTag in package.find_all("li",{"class": "cl5"}):
-                package = packageClass()
-                package.setPackage(liTag.find("a").text)
-                packageNames.append(liTag.find("a").text)
-                package.setPackageUrl(model.series[serie].serieUrl+"-"+liTag.find("a").text.lower())
-                model.series[serie].appendPackage(package.packageName, package)
+        packageNames = []
 
-        model.series[serie].setPackageNames(packageNames)
-        requestCount+=1
+        for packageItem in soupSerie.find_all("div", {"class": "scroll-pane lazy-scroll"}):
+            for liTag in packageItem.find_all("li", {"class": "cl5"}):
+                packageName = liTag.find("a").text
+                packageUrl = model.series[serie].serieUrl + "-" + liTag.find("a").text.lower()
+                _package = package(v_type, brand, model, serie, packageName, packageUrl)
+                model.series[serie].appendPackage(_package.packageName, _package)
+                packageNames.append(packageName)
+        packages.append(packageNames)
 
-def scrapItems(url):
-    page = requests.get(url, headers=HEADERS)
+    return packages
+
+def scrapAdURls(url, req):
+
+    page = req.request(url)
     soup = BeautifulSoup(page.content, "html.parser")
-    i=0
+
+    adUrls = []
     mainUrl = "https://sahibinden.com"
-    advs=[]
-    #session=getSession()
+    for item in soup.find_all("tr", {"data-id": True}):
+        adUrls.append(mainUrl + item.find("a")["href"])
 
-    for item in soup.find_all("tr",{"data-id":True}):
-        print(mainUrl+item.find("a")["href"])
-        page = requests.get(mainUrl+item.find("a")["href"], headers = HEADERS)
-        soup=BeautifulSoup(page.content,"html.parser")
-        adv = ad()
+    return adUrls
 
+def scrapItem(url, req, licencePlate=True):
+
+    page = req.request(url)
+    soup = BeautifulSoup(page.content, "html.parser")
+
+    if soup == -1:
+        print("-Item")
+        return
+    adv = ad()
+
+    if licencePlate:
         adv.setPlateNumber(extractPlateNumber(soup))
-        adv.setTitle(soup.find("div", {"class":"classifiedDetailTitle"}).find("h1").text)
-        adv.setAdId(soup.find("span", {"class": "classifiedId"}).text)
-        adv.setSellerName(soup.find("div",{"class":"username-info-area"}).find("h5").text)
-        adv.setSellerNick(soup.find("dt").text)
-        if soup.find("p", { "class":"userRegistrationDate"}) != None:
-            adv.setSellerDateSignedUp(soup.find("p", { "class":"userRegistrationDate"}).text.replace("\n","").replace("  ","")[13:])
-        if soup.find("span",{"class":"pretty-phone-part"}) != None:
-            adv.setCellPhone(soup.find("span",{"class":"pretty-phone-part"}).text)
-        adv.setPrice(soup.find("input", {"id":"priceHistoryFlag"}).previousSibling.replace("\n","").replace("  ",""))
-        adv.setCategory(soup.find("img")["alt"].split("/")[1])
+    else:
+        adv.setPlateNumber(None)
 
-        for ulTag in soup.find_all("ul", {"class":"classifiedInfoList"}):
-            for liTag in ulTag.find_all("li", {"class":""}):
-                tag = liTag.find("strong")
+    adv.setTitle(soup.find("div", {"class": "classifiedDetailTitle"}).find("h1").text)
+    adv.setAdId(soup.find("span", {"class": "classifiedId"}).text)
+    adv.setSellerName(soup.find("div", {"class": "username-info-area"}).find("h5").text)
+    adv.setSellerNick(soup.find("dt").text)
+    if soup.find("p", {"class": "userRegistrationDate"}) != None:
+        adv.setSellerDateSignedUp(
+            soup.find("p", {"class": "userRegistrationDate"}).text.replace("\n", "").replace("  ", "")[13:])
+    if soup.find("span", {"class": "pretty-phone-part"}) != None:
+        adv.setCellPhone(soup.find("span", {"class": "pretty-phone-part"}).text)
+    adv.setPrice(soup.find("input", {"id": "priceHistoryFlag"}).previousSibling.replace("\n", "").replace("  ", ""))
+    adv.setCategory(soup.find("img")["alt"].split("/")[1])
 
-                if tag.text == "Marka":
-                    adv.setBrand(liTag.find("span").text.replace("\xa0","")[0])
+    for ulTag in soup.find_all("ul", {"class": "classifiedInfoList"}):
+        for liTag in ulTag.find_all("li", {"class": ""}):
+            tag = liTag.find("strong")
 
-                elif tag.text == "Seri":
-                    adv.setSerie(liTag.find("span").text.replace("\xa0","")[0])
-                elif tag.text == "Model":
-                    model = liTag.find("span").text
-                    adv.setModel(model.replace("\xa0",""))
-                elif tag.text == "Yıl":
-                    adv.setYear(liTag.find("span").text.replace("  ","").replace("\n","").replace("\t",""))
-                elif tag.text == "Yakıt":
-                    adv.setFuel(liTag.find("span").text.replace("  ","").replace("\n","").replace("\t",""))
-                elif tag.text == "Vites":
-                    adv.setTransmission(liTag.find("span").text.replace("  ","").replace("\n","").replace("\t",""))
-                elif tag.text == "KM":
-                    adv.setKM(liTag.find("span").text.replace("  ","").replace("\n","").replace("\t",""))
-                elif tag.text == "Kasa Tipi":
-                    adv.setBodyType(liTag.find("span").text.replace("  ","").replace("\n","").replace("\t",""))
-                elif tag.text == "Motor Gücü":
-                    adv.setEnginePower(liTag.find("span").text.replace("  ","").replace("\n","").replace("\t",""))
-                elif tag.text == "Motor Hacmi":
-                    adv.setEngineCapacity(liTag.find("span").text.replace("  ","").replace("\n","").replace("\t",""))
-                elif tag.text == "Renk":
-                    adv.setColor(liTag.find("span").text.replace("  ","").replace("\n","").replace("\t",""))
+            if tag.text == "Marka":
+                adv.setBrand(liTag.find("span").text.replace("\xa0", "")[0])
 
-        counter = 0
-        for h in soup.find_all("h2"):
-            for a in h.find_all("a", {"data-click-label": True}):
-                if counter == 0:
-                    adv.setCity(a.text.replace("  ","").replace("\n",""))
-                elif counter == 1:
-                    adv.setCounty(a.text.replace("  ", "").replace("\n",""))
-                elif counter == 2:
-                    adv.setDistrict(a.text.replace("  ", "").replace("\n",""))
-                counter +=1
+            elif tag.text == "Seri":
+                adv.setSerie(liTag.find("span").text.replace("\xa0", "")[0])
+            elif tag.text == "Model":
+                model = liTag.find("span").text
+                adv.setModel(model.replace("\xa0", ""))
+            elif tag.text == "Yıl":
+                adv.setYear(liTag.find("span").text.replace("  ", "").replace("\n", "").replace("\t", ""))
+            elif tag.text == "Yakıt":
+                adv.setFuel(liTag.find("span").text.replace("  ", "").replace("\n", "").replace("\t", ""))
+            elif tag.text == "Vites":
+                adv.setTransmission(liTag.find("span").text.replace("  ", "").replace("\n", "").replace("\t", ""))
+            elif tag.text == "KM":
+                adv.setKM(liTag.find("span").text.replace("  ", "").replace("\n", "").replace("\t", ""))
+            elif tag.text == "Kasa Tipi":
+                adv.setBodyType(liTag.find("span").text.replace("  ", "").replace("\n", "").replace("\t", ""))
+            elif tag.text == "Motor Gücü":
+                adv.setEnginePower(liTag.find("span").text.replace("  ", "").replace("\n", "").replace("\t", ""))
+            elif tag.text == "Motor Hacmi":
+                adv.setEngineCapacity(liTag.find("span").text.replace("  ", "").replace("\n", "").replace("\t", ""))
+            elif tag.text == "Renk":
+                adv.setColor(liTag.find("span").text.replace("  ", "").replace("\n", "").replace("\t", ""))
 
-        advs.append(adv)
+    counter = 0
+    for h in soup.find_all("h2"):
+        for a in h.find_all("a", {"data-click-label": True}):
+            if counter == 0:
+                adv.setCity(a.text.replace("  ", "").replace("\n", ""))
+            elif counter == 1:
+                adv.setCounty(a.text.replace("  ", "").replace("\n", ""))
+            elif counter == 2:
+                adv.setDistrict(a.text.replace("  ", "").replace("\n", ""))
+            counter += 1
 
-    return advs
+    return adv
 
 
-
-url = 'https://www.sahibinden.com/audi-a1-1.4-tfsi-ambition'
-#models = []
-#brands,brandNames=scrapBrands()
-#scrapModels(brands,["Audi"])
-#scrapSeries(brands["Audi"],["A1"])
-#scrapPackages(brands["Audi"].models["A1"],["1.4 TFSI"])
+r = requester(headersList, True)

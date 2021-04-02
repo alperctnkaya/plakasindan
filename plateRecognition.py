@@ -2,7 +2,7 @@ from openalpr import Alpr
 import sys
 import requests
 from bs4 import BeautifulSoup
-
+import os
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.87 Safari/537.36', }
@@ -58,8 +58,8 @@ def recognizePlate(imgPath):
     return  plateNumber
 
 
-def saveImage(imgUrl, imgName):
-    response = requests.get(imgUrl)
+def saveImage(imgUrl, imgName, req):
+    response = req.request(imgUrl)
     file = open("./plates/"+imgName,"wb")
     file.write(response.content)
     file.close()
@@ -72,13 +72,18 @@ def extractImageUrls(soup):
     imgUrls.append(soup.find("img",{"class":"stdImg"})["src"])
     return imgUrls
 
-def extractPlateNumber(soup):
+def extractPlateNumber(soup = None, req = None, url=None):
+    if url != None:
+        page = req.request(url)
+        soup = BeautifulSoup(page.content, "html.parser")
 
     imgUrls= extractImageUrls(soup)
+
     for url in imgUrls:
-        saveImage(url,"adImage.jpg")
+        saveImage(url,"adImage.jpg", req)
         plateNumber = recognizePlate("./plates/adImage.jpg")
         if plateNumber:
+            os.rename("./plates/adImage.jpg", plateNumber+".jpg")
             break
 
     return plateNumber

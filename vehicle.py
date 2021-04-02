@@ -1,76 +1,57 @@
-class vehicle():
+class brand():
 
-    def __init__(self, type, brand, url):
-        self.type = type
+    def __init__(self, brand, url):
         self.brand = brand
         self.brandUrl = url
         self.modelNames = []
         self.models = {}
 
+    def appendModel(self, modelName, modelObject):
+        self.models[modelName]= modelObject
+        self.modelNames.append(modelName)
 
 
-    def setModelNames(self,modelNames):
-        self.modelNames = modelNames
-
-    def appendModel(self,modelName, modelObject):
-        self.models[modelName]=modelObject
-
-
-class modelClass():
-    def __init__(self):
-        self.modelName = None
-        self.modelUrl = None
-        self.serieNames = None
+class model():
+    def __init__(self, type, brand, modelName, url):
+        self.type = type
+        self.brand = brand
+        self.modelName = modelName
+        self.modelUrl = url
+        self.serieNames = []
         self.series ={}
-
-    def setModel(self,model):
-        self.modelName = model
-
-    def setModelUrl(self, modelUrl):
-        self.modelUrl= modelUrl
 
     def appendSerie(self,serieName, serieObject):
         self.series[serieName]=serieObject
+        self.serieNames.append(serieName)
 
-    def setSerieNames(self,serieNames):
-        self.serieNames = serieNames
-
-class serieClass():
-    def __init__(self):
-        self.serieName = None
-        self.serieUrl = None
-        self.packageNames = None
-        self. packages={}
-
-    def setSerie(self,serie):
-        self.serieName = serie
-
-    def setSerieUrl(self,serieUrl):
+class serie():
+    def __init__(self, v_type, brand, model, serieName, serieUrl):
+        self.v_type = v_type
+        self.brand = brand
+        self.model = model
+        self.serieName = serieName
         self.serieUrl = serieUrl
+        self.packageNames = []
+        self.packages={}
 
     def appendPackage(self, packageName, packageObject):
-        self.packages[packageName]=packageObject
-
-    def setPackageNames(self, packageNames):
-        self.packageNames = packageNames
+        self.packages[packageName] = packageObject
+        self.packageNames.append(packageName)
 
 
-class packageClass():
-    def __init__(self):
-        self.packageName=None
-        self.packageUrl=None
-
-    def setPackage(self,package):
-        self.packageName = package
-
-    def setPackageUrl(self, packageUrl):
+class package():
+    def __init__(self, v_type, brand, model, serieName, packageName, packageUrl):
+        self.v_type = v_type
+        self.brand = brand
+        self.model = model
+        self.serieName = serieName
+        self.packageName = packageName
         self.packageUrl = packageUrl
+
 
 class ad():
     def __init__(self):
-        self.title = None
-        self.dateSignedUp = None
-        self.phoneNumber = None
+        pass
 
     def setTitle(self,title):
         self.title = title
@@ -89,9 +70,6 @@ class ad():
 
     def setDistrict(self, district):
         self.district = district
-
-    def setPlateNumber(self,plateNumber):
-        self.plateNumber = plateNumber
 
     def setSellerName(self,sellerName):
         self.sellerName=sellerName
@@ -152,4 +130,3 @@ class ad():
 
     def setColor(self,color):
         self.color = color
-
