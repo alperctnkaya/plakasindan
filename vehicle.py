@@ -1,4 +1,4 @@
-class brand():
+class brand:
 
     def __init__(self, brand, url):
         self.brand = brand
@@ -11,7 +11,7 @@ class brand():
         self.modelNames.append(modelName)
 
 
-class model():
+class model:
     def __init__(self, type, brand, modelName, url):
         self.type = type
         self.brand = brand
@@ -24,7 +24,7 @@ class model():
         self.series[serieName]=serieObject
         self.serieNames.append(serieName)
 
-class serie():
+class serie:
     def __init__(self, v_type, brand, model, serieName, serieUrl):
         self.v_type = v_type
         self.brand = brand
@@ -39,7 +39,7 @@ class serie():
         self.packageNames.append(packageName)
 
 
-class package():
+class package:
     def __init__(self, v_type, brand, model, serieName, packageName, packageUrl):
         self.v_type = v_type
         self.brand = brand
@@ -49,7 +49,7 @@ class package():
         self.packageUrl = packageUrl
 
 
-class ad():
+class ad:
     def __init__(self):
         pass
 
@@ -57,10 +57,10 @@ class ad():
         self.title = title
 
     def setAdId(self,id):
-        self.id=id
+        self.adId = id
 
     def setPlateNumber(self,plateNumber):
-        self.plateNumber= plateNumber
+        self.plateNumber = plateNumber
 
     def setCity(self,city):
         self.city = city
@@ -78,7 +78,7 @@ class ad():
         self.sellerNick = sellerNick
 
     def setSellerDateSignedUp(self,dateSignedUp):
-        self.dateSingnedUp=dateSignedUp
+        self.dateSignedUp=dateSignedUp
 
     def setCellPhone(self,phoneNumber):
         self.phoneNumber = phoneNumber
@@ -130,3 +130,6 @@ class ad():
 
     def setColor(self,color):
         self.color = color
+
+    def setAdUrl(self,url):
+        self.adUrl = url

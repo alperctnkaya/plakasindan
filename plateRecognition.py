@@ -83,7 +83,7 @@ def extractPlateNumber(soup = None, req = None, url=None):
         saveImage(url,"adImage.jpg", req)
         plateNumber = recognizePlate("./plates/adImage.jpg")
         if plateNumber:
-            os.rename("./plates/adImage.jpg", plateNumber+".jpg")
+            os.rename("./plates/adImage.jpg", "./plates/"+plateNumber+".jpg")
             break
 
     return plateNumber

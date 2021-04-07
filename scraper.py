@@ -3,7 +3,7 @@ from proxies import *
 from plateRecognition import *
 from requester import *
 from bs4 import BeautifulSoup
-
+from dbConnector import *
 
 URL = "https://www.sahibinden.com"
 
@@ -191,7 +191,7 @@ def scrapItem(url, req, licencePlate=True):
     adv = ad()
 
     if licencePlate:
-        adv.setPlateNumber(extractPlateNumber(soup))
+        adv.setPlateNumber(extractPlateNumber(soup=soup, req=req))
     else:
         adv.setPlateNumber(None)
 
@@ -246,6 +246,8 @@ def scrapItem(url, req, licencePlate=True):
             elif counter == 2:
                 adv.setDistrict(a.text.replace("  ", "").replace("\n", ""))
             counter += 1
+
+    adv.setAdUrl(url)
 
     return adv
 
