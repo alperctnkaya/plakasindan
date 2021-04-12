@@ -22,12 +22,14 @@ class requester:
             self.requestCountThread = threading.Thread(target=self.printTotalRequest)
             self.requestCountThread.daemon = True
             self.requestCountThread.start()
+
         signal.signal(signal.SIGINT, self.sigint_handler)
 
     def request(self, url):
 
         success = False
         while self.run:
+            time.sleep(0.0001)
             try:
                 page = requests.get(url, timeout=2, headers=self.header)
 

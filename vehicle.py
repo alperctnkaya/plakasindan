@@ -40,12 +40,12 @@ class serie:
 
 
 class package:
-    def __init__(self, v_type, brand, model, serieName, packageName, packageUrl):
-        self.v_type = v_type
-        self.brand = brand
-        self.model = model
-        self.serieName = serieName
-        self.packageName = packageName
+    def __init__(self, v_type, brandName, modelName, serieName, packageName, packageUrl):
+        self.vehicleType = v_type
+        self.brand = brandName
+        self.model = modelName
+        self.serie = serieName
+        self.package = packageName
         self.packageUrl = packageUrl
 
 

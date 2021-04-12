@@ -9,26 +9,6 @@ URL = "https://www.sahibinden.com"
 
 headersList = []
 
-headersList.append({
-    "Cache-Control": "max-age=0",
-    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.87 Safari/537.36',
- })
-headersList.append({
-    "Accept-Encoding": "gzip, deflate, br",
-    "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0",
- })
-headersList.append({
-    "Accept-Language": "en-US,en;q=0.5",
-    "Accept-Encoding": "gzip, br",
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0",
-})
-
-headersList.append({
-    "Accept-Language": "en-US,en;q=0.5",
-    "Accept-Encoding": "gzip, br",
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0",
-    "Cookie": "vid=66; cdid=cX8LRliHmXW43Ghm605af0cb; MS1=https://www.google.com/; _fbp=fb.1.1616581610353.907691525; _ga=GA1.2.1228957301.1616581612; nwsh=std; OptanonConsent=isIABGlobal=false&datestamp=Thu+Apr+01+2021+11%3A50%3A49+GMT%2B0300+(GMT%2B03%3A00)&version=6.14.0&hosts=&consentId=0d17179d-0703-433c-7b89-575d5db3cd49&interactionCount=2&landingPath=NotLandingPage&groups=C0001%3A1%2CC0004%3A0&AwaitingReconsent=false&geolocation=TR%3B06; _gid=GA1.2.284740771.1617020639; OptanonAlertBoxClosed=2021-03-29T12:27:33.786Z; st=a84541c4b561942468995fb30a3eba0340698520ac097914358a610c9690db6eee60ad758188271022f5771df6964f0e1d3f80dbe0f2ba206; geoipCity=antalya; geoipIsp=turkcell_superonline"})
-
 
 headersList.append({
     "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:86.0) Gecko/20100101 Firefox/86.0",
@@ -54,13 +34,15 @@ def scrapBrandTree(req, brands=None):
     for brand in brandNames:
         try:
             scrapSeries(brands[brand], brands[brand].modelNames, req)
-        except:
+        except Exception as err:
+            print(err)
             return brands
 
         for model in brands[brand].modelNames:
             try:
                 scrapPackages(brands[brand].models[model], brands[brand].models[model].series, req)
-            except:
+            except Exception as err:
+                print(err)
                 return brands
 
     return brands
@@ -91,7 +73,7 @@ def scrapModels(brands, brandNames, req):
         url = brands[brand].brandUrl
         page = req.request(url)
         soupBrand = BeautifulSoup(page.content, "html.parser")
-        if (soupBrand == -1):
+        if soupBrand == -1:
             return
 
         models = []
@@ -161,12 +143,13 @@ def scrapPackages(model, series, req):
             for liTag in packageItem.find_all("li", {"class": "cl5"}):
                 packageName = liTag.find("a").text
                 packageUrl = model.series[serie].serieUrl + "-" + liTag.find("a").text.lower()
-                _package = package(v_type, brand, model, serie, packageName, packageUrl)
-                model.series[serie].appendPackage(_package.packageName, _package)
+                _package = package(v_type, brand, model.modelName, serie, packageName, packageUrl)
+                model.series[serie].appendPackage(_package.package, _package)
                 packageNames.append(packageName)
         packages.append(packageNames)
 
     return packages
+
 
 def scrapAdURls(url, req):
 
@@ -180,8 +163,8 @@ def scrapAdURls(url, req):
 
     return adUrls
 
-def scrapItem(url, req, licencePlate=True):
 
+def scrapItem(url, req, licencePlate=True):
     page = req.request(url)
     soup = BeautifulSoup(page.content, "html.parser")
 
@@ -199,10 +182,10 @@ def scrapItem(url, req, licencePlate=True):
     adv.setAdId(soup.find("span", {"class": "classifiedId"}).text)
     adv.setSellerName(soup.find("div", {"class": "username-info-area"}).find("h5").text)
     adv.setSellerNick(soup.find("dt").text)
-    if soup.find("p", {"class": "userRegistrationDate"}) != None:
+    if soup.find("p", {"class": "userRegistrationDate"}) is not None:
         adv.setSellerDateSignedUp(
             soup.find("p", {"class": "userRegistrationDate"}).text.replace("\n", "").replace("  ", "")[13:])
-    if soup.find("span", {"class": "pretty-phone-part"}) != None:
+    if soup.find("span", {"class": "pretty-phone-part"}) is not None:
         adv.setCellPhone(soup.find("span", {"class": "pretty-phone-part"}).text)
     adv.setPrice(soup.find("input", {"id": "priceHistoryFlag"}).previousSibling.replace("\n", "").replace("  ", ""))
     adv.setCategory(soup.find("img")["alt"].split("/")[1])
@@ -250,6 +233,3 @@ def scrapItem(url, req, licencePlate=True):
     adv.setAdUrl(url)
 
     return adv
-
-
-r = requester(headersList, True)
