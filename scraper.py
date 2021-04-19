@@ -3,7 +3,6 @@ from proxies import *
 from plateRecognition import *
 from requester import *
 from bs4 import BeautifulSoup
-from dbConnector import *
 
 URL = "https://www.sahibinden.com"
 
@@ -22,14 +21,15 @@ headersList.append({
 })
 
 
-def scrapBrandTree(req, brands=None):
-    if brands is None:
-        brands = scrapBrands(req)
+def scrapBrandTree():
+
+    req = requester(headersList, True)
+
+    brands = scrapBrands(req)
 
     brandNames = [brand for brand in brands]
 
-    if False:
-        scrapModels(brands, brandNames, req)
+    scrapModels(brands, brandNames, req)
 
     for brand in brandNames:
         try:
@@ -100,7 +100,7 @@ def scrapSeries(brand, models, req):
         page = req.request(url)
         soupModel = BeautifulSoup(page.content, "html.parser")
 
-        if (soupModel == -1):
+        if soupModel == -1:
             print("-SERIES")
             return
 
@@ -133,7 +133,7 @@ def scrapPackages(model, series, req):
         page = req.request(url)
         soupSerie = BeautifulSoup(page.content, "html.parser")
 
-        if (soupSerie == -1):
+        if soupSerie == -1:
             print("-SERIES")
             return
 
